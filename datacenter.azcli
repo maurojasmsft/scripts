@@ -1,4 +1,7 @@
+
 rg=datacntr
+
+az vm image terms accept --urn cisco:cisco-csr-1000v:16_12-byol:latest
 az group create --name $rg --location eastus2
 az network vnet create --resource-group $rg --name $rg --location eastus2 --address-prefixes 10.1.0.0/16 --subnet-name VM --subnet-prefix 10.1.10.0/24
 az network vnet subnet create --address-prefix 10.1.0.0/24 --name zeronet --resource-group $rg --vnet-name $rg
