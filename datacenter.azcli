@@ -6,6 +6,7 @@ az group create --name $rg --location eastus2
 az network vnet create --resource-group $rg --name $rg --location eastus2 --address-prefixes 10.1.0.0/16 --subnet-name VM --subnet-prefix 10.1.10.0/24
 az network vnet subnet create --address-prefix 10.1.0.0/24 --name zeronet --resource-group $rg --vnet-name $rg
 az network vnet subnet create --address-prefix 10.1.1.0/24 --name onenet --resource-group $rg --vnet-name $rg
+az network vnet subnet create --address-prefix 10.3.0.0/24 --name RouteServerSubnet --resource-group $RG --vnet-name $RG 
 
 az network nsg create --resource-group $rg --name $rg-CSR-NSG --location eastus2
 az network nsg rule create --resource-group $rg --nsg-name $rg-CSR-NSG --name Allow-Out --access Allow --protocol "*" --direction Outbound --priority 100 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
@@ -29,3 +30,9 @@ az network nsg rule create --resource-group $rg --nsg-name $rg-VM-NSG --name All
 az network public-ip create --name $rg-VMPubIP --resource-group $rg --location eastus2 --allocation-method Dynamic
 az network nic create --resource-group $rg -n $rg-VMNIC --location eastus2 --subnet VM --private-ip-address 10.1.10.10 --vnet-name $rg --public-ip-address $rg-VMPubIP --network-security-group $rg-VM-NSG --ip-forwarding true
 az vm create -n $rg-VM -g $rg --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics $rgVMNIC --no-wait
+
+#Create Route server
+
+#subnet_id=$(az network vnet subnet show --name RouteServerSubnet --resource-group $RG --vnet-name $RG --query id -o tsv) 
+#echo $subnet_id
+#az network public-ip create --name RouteServerIP --resource-group $RG --version IPv4 --sku Standard
