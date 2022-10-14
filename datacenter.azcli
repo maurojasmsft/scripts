@@ -25,7 +25,7 @@ az network route-table route create --name vm-rt --resource-group $rg --route-ta
 az network vnet subnet update --name VM --vnet-name $rg --resource-group $rg --route-table vm-rt
 
 az network nsg create --resource-group $rg --name $rg-VM-NSG --location eastus2
-az network nsg rule create --resource-group $rg --nsg-name $rg-VM-NSG --name Allow-SSH-All --access Allow --protocol Tcp --direction Inbound --priority 120 --source-address-prefix * --source-port-range "*" --destination-address-prefix "*" --destination-port-range 22
+az network nsg rule create --resource-group $rg --nsg-name $rg-VM-NSG --name Allow-SSH-All --access Allow --protocol Tcp --direction Inbound --priority 120 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range 22
 az network public-ip create --name $rgVMPubIP --resource-group $rg --location eastus2 --allocation-method Dynamic
 az network nic create --resource-group $rg -n $rgVMNIC --location eastus2 --subnet VM --private-ip-address 10.1.10.10 --vnet-name $rg --public-ip-address $rgVMPubIP --network-security-group $rg-VM-NSG --ip-forwarding true
 az vm create -n $rgVM -g $rg --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics $rgVMNIC --no-wait
