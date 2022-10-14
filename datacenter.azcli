@@ -1,0 +1,28 @@
+rg=datacntr
+az group create --name $rg --location eastus2
+az network vnet create --resource-group $rg --name $rg --location eastus2 --address-prefixes 10.1.0.0/16 --subnet-name VM --subnet-prefix 10.1.10.0/24
+az network vnet subnet create --address-prefix 10.1.0.0/24 --name zeronet --resource-group $rg --vnet-name $rg
+az network vnet subnet create --address-prefix 10.1.1.0/24 --name onenet --resource-group $rg --vnet-name $rg
+
+az network nsg create --resource-group $rg --name $rg-CSR-NSG --location eastus2
+az network nsg rule create --resource-group $rg --nsg-name $rg-CSR-NSG --name Allow-Out --access Allow --protocol "*" --direction Outbound --priority 100 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+
+az network public-ip create --name CSR1PublicIP --resource-group $rg --idle-timeout 30 --allocation-method Static
+az network nic create --name CSR1OutsideInterface -g $rg --subnet zeronet --vnet $rg --public-ip-address CSR1PublicIP --private-ip-address 10.1.0.4 --ip-forwarding true --network-security-group $rg-CSR-NSG
+az network nic create --name CSR1InsideInterface -g $rg --subnet onenet --vnet $rg --ip-forwarding true --private-ip-address 10.1.1.4 --network-security-group $rg-CSR-NSG
+az vm create --resource-group $rg --location eastus2 --name CSR1 --size Standard_D2_v2 --nics CSR1OutsideInterface CSR1InsideInterface  --image cisco:cisco-csr-1000v:17_3_4a-byol:latest --admin-username azureuser --admin-password Msft123Msft123 --no-wait
+
+az network public-ip create --name CSR1PublicIP --resource-group $rg --idle-timeout 30 --allocation-method Static
+az network nic create --name CSR1OutsideInterface -g $rg --subnet zeronet --vnet $rg --public-ip-address CSR1PublicIP --private-ip-address 10.1.0.4 --ip-forwarding true --network-security-group $rg-CSR-NSG
+az network nic create --name CSR1InsideInterface -g $rg --subnet onenet --vnet $rg --ip-forwarding true --private-ip-address 10.1.1.4 --network-security-group $rg-CSR-NSG
+az vm create --resource-group $rg --location eastus2 --name CSR1 --size Standard_D2_v2 --nics CSR1OutsideInterface CSR1InsideInterface  --image cisco:cisco-csr-1000v:16_12-byol:latest --admin-username azureuser --admin-password Msft123Msft123 --no-wait
+
+az network route-table create --name vm-rt --resource-group $rg
+az network route-table route create --name vm-rt --resource-group $rg --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.1.1.4
+az network vnet subnet update --name VM --vnet-name $rg --resource-group $rg --route-table vm-rt
+
+az network nsg create --resource-group datacenter --name datacenter-VM-NSG --location eastus2
+az network nsg rule create --resource-group datacenter --nsg-name datacenter-VM-NSG --name Allow-SSH-All --access Allow --protocol Tcp --direction Inbound --priority 120 --source-address-prefix * --source-port-range "*" --destination-address-prefix "*" --destination-port-range 22
+az network public-ip create --name datacenterVMPubIP --resource-group datacenter --location eastus2 --allocation-method Dynamic
+az network nic create --resource-group datacenter -n datacenterVMNIC --location eastus2 --subnet VM --private-ip-address 10.1.10.10 --vnet-name datacenter --public-ip-address datacenterVMPubIP --network-security-group datacenter-VM-NSG --ip-forwarding true
+az vm create -n datacenterVM -g datacenter --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics datacenterVMNIC --no-wait
